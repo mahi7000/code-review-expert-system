@@ -1,3 +1,4 @@
+:- module(rule17_shell_injection, [check_shell_injection/2]).
 
 check_shell_injection(File, Violations) :-
     read_file_lines(File, Lines),

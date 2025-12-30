@@ -1,4 +1,5 @@
 % Rule 16: Check for pickle.load() usage - Security Risk!
+:- module(rule16_pickle, [check_pickle/2]).
 
 check_pickle(File, Violations) :-
     read_file_lines(File, Lines),

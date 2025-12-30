@@ -1,5 +1,5 @@
 % Rule 2: Check for missing docstrings in functions/classes
-
+:- module(rule2_docstring, [check_docstrings/2]).
 
 check_docstrings(File, Violations) :-
     read_file_lines(File, Lines),

@@ -1,4 +1,5 @@
 % Rule 3: Check for non-PEP8 naming conventions
+:- module(rule3_naming, [check_naming/2]).
 
 check_naming(File, Violations) :-
     read_file_lines(File, Lines),

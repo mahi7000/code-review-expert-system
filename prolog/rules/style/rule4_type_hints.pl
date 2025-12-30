@@ -1,4 +1,5 @@
 % Rule 4: Check for missing type hints in functions
+:- module(rule4_type_hints, [check_type_hints/2]).
 
 check_type_hints(File, Violations) :-
     read_file_lines(File, Lines),

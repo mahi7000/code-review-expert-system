@@ -1,5 +1,5 @@
 ﻿
-:- [prolog/utils/file_loader].
+:- [prolog/utils/file_loader1].
 :- [prolog/rules/style/rule1_line_length].
 :- [prolog/rules/style/rule2_docstring].
 :- [prolog/rules/style/rule3_naming].

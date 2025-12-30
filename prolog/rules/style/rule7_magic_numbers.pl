@@ -1,4 +1,5 @@
 % Rule 7: Check for magic numbers
+:- module(rule7_magic_numbers, [check_magic_numbers/2]).
 
 check_magic_numbers(File, Violations) :-
     read_file_lines(File, Lines),

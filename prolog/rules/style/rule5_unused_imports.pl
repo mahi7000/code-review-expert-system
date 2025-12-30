@@ -1,5 +1,5 @@
 % Rule 5: Check for unused imports
-
+:- module(rule5_unused_imports, [check_unused_imports/2]).
 
 check_unused_imports(File, Violations) :-
     read_file_lines(File, Lines),

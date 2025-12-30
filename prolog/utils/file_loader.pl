@@ -1,43 +1,14 @@
-% Purpose: Read Python files line by line
+:- module(file_loader, [load_lines/2]).
 
-:- dynamic read_file_lines/2.
+load_lines(File, Lines) :-
+    open(File, read, Stream),
+    read_lines(Stream, 1, Lines),
+    close(Stream).
 
-read_file_lines(File, Lines) :-
-    setup_call_cleanup(
-        open(File, read, Stream),
-        read_lines(Stream, Lines),
-        close(Stream)
-    ).
-
-read_lines(Stream, []) :-
+read_lines(Stream, _, []) :-
     at_end_of_stream(Stream), !.
-read_lines(Stream, [Line|Lines]) :-
+read_lines(Stream, N, [N-Line|Rest]) :-
     \+ at_end_of_stream(Stream),
     read_line_to_string(Stream, Line),
-    read_lines(Stream, Lines).
-
-% Helper: Check if string contains substring
-contains(Line, Substring) :-
-    sub_string(Line, _, _, _, Substring).
-
-% Helper: Remove leading/trailing whitespace
-trim_string(String, Trimmed) :-
-    string_chars(String, Chars),
-    trim(Chars, TrimmedChars),
-    string_chars(Trimmed, TrimmedChars).
-
-trim([], []).
-trim([H|T], R) :-
-    char_type(H, space),
-    trim(T, R).
-trim([H|T], [H|R]) :-
-    \+ char_type(H, space),
-    trim_rest(T, R).
-
-trim_rest([], []).
-trim_rest([H|T], [H|R]) :-
-    char_type(H, space),
-    trim_rest(T, R).
-trim_rest([H|T], [H|R]) :-
-    \+ char_type(H, space),
-    trim_rest(T, R).
+    N1 is N + 1,
+    read_lines(Stream, N1, Rest).

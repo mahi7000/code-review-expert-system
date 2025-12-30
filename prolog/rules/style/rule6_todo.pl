@@ -1,4 +1,5 @@
 % Rule 6: Check for TODO comments
+:- module(rule6_todo, [check_todo_comments/2]).
 
 check_todo_comments(File, Violations) :-
     read_file_lines(File, Lines),

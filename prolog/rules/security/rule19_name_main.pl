@@ -1,4 +1,5 @@
 % Rule 19: Check for missing if __name__ == "__main__"
+:- module(rule19_name_main, [check_name_main/2]).
 
 check_name_main(File, Violations) :-
     read_file_lines(File, Lines),
