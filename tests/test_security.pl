@@ -1,5 +1,4 @@
-
-:- [prolog/utils/file_loader].
+:- [prolog/utils/file_loader1].
 :- [prolog/rules/security/rule15_eval].
 :- [prolog/rules/security/rule16_pickle].
 :- [prolog/rules/security/rule17_shell_injection].

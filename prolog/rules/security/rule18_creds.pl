@@ -1,4 +1,5 @@
 % Rule 18: Check for hardcoded credentials
+:- module(rule18_creds, [check_hardcoded_creds/2]).
 
 check_hardcoded_creds(File, Violations) :-
     read_file_lines(File, Lines),

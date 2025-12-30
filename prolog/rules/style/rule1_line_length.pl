@@ -1,4 +1,5 @@
 % Rule 1: Check for lines longer than 79 characters (PEP 8)
+:- module(rule1_line_length, [check_line_length/2]).
 
 check_line_length(File, Violations) :-
     read_file_lines(File, Lines),

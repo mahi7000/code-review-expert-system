@@ -1,4 +1,5 @@
 % Rule 15: Check for eval() usage - Security Risk!
+:- module(rule15_eval, [check_eval/2]).
 
 check_eval(File, Violations) :-
     read_file_lines(File, Lines),

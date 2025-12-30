@@ -1,5 +1,5 @@
 % Rule 20: Check for bare except statements
-
+:- module(rule20_exception, [check_bare_except/2]).
 
 check_bare_except(File, Violations) :-
     read_file_lines(File, Lines),

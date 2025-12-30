@@ -1,64 +1,59 @@
-:- [prolog/utils/file_loader].
+:- use_module(prolog/utils/file_loader).
+:- use_module(prolog/rule_engine).
 
-% Load all style rules
-:- [prolog/rules/style/rule1_line_length].
-:- [prolog/rules/style/rule2_docstring].
-:- [prolog/rules/style/rule3_naming].
-:- [prolog/rules/style/rule4_type_hints].
-:- [prolog/rules/style/rule5_unused_imports].
-:- [prolog/rules/style/rule6_todo].
-:- [prolog/rules/style/rule7_magic_numbers].
+:- initialization(main, main).
 
-% Load all security rules
-:- [prolog/rules/security/rule15_eval].
-:- [prolog/rules/security/rule16_pickle].
-:- [prolog/rules/security/rule17_shell_injection].
-:- [prolog/rules/security/rule18_creds].
-:- [prolog/rules/security/rule19_name_main].
-:- [prolog/rules/security/rule20_exception].
+main :-
+    banner,
+    test_file('python_examples/rule_tests/performance_tests.py'),
+    nl,
+    test_file('python_examples/good_examples.py'),
+    nl,
+    summary,
+    halt.
 
-test_all :-
-    format('=== PERSON 1: STYLE & SECURITY RULES TEST ===~n~n', []),
-    
-    test_file('python_examples/bad_examples.py'),
-    test_file('python_examples/rule_tests/security_tests.py').
+banner :-
+    nl,
+    write('============================================'), nl,
+    write('     CODE REVIEW EXPERT SYSTEM TEST'), nl,
+    write('============================================'), nl, nl.
 
 test_file(File) :-
-    format('~n========== Testing: ~w ==========~n~n', [File]),
-    
-    % Style Rules
-    format('STYLE RULES:~n', []),
-    run_rule(check_line_length, 'Line Length', File),
-    run_rule(check_docstrings, 'Docstrings', File),
-    run_rule(check_naming, 'Naming', File),
-    run_rule(check_type_hints, 'Type Hints', File),
-    run_rule(check_unused_imports, 'Unused Imports', File),
-    run_rule(check_todo_comments, 'TODO Comments', File),
-    run_rule(check_magic_numbers, 'Magic Numbers', File),
-    
-    format('~nSECURITY RULES:~n', []),
-    % Security Rules
-    run_rule(check_eval, 'eval()', File),
-    run_rule(check_pickle, 'pickle', File),
-    run_rule(check_shell_injection, 'Shell Injection', File),
-    run_rule(check_hardcoded_creds, 'Credentials', File),
-    run_rule(check_name_main, 'name == main', File),
-    run_rule(check_bare_except, 'Bare Except', File),
-    
-    format('~n').
+    format('Testing file: ~w~n', [File]),
+    retractall(violation(_,_,_)),
+    load_python_file(File),
+    set_current_file(File),
+    run_all_rules,
+    show_results.
 
-run_rule(Predicate, RuleName, File) :-
-    (call(Predicate, File, Violations) ->
-        (Violations = [] ->
-            true
-        ;
-            format('  [~w]: ', [RuleName]),
-            length(Violations, Count),
-            format('~w violations~n', [Count])
-        )
-    ;
-        format('  [~w]: ERROR~n', [RuleName])
+show_results :-
+    nl,
+    forall(
+        rule_desc(Rule, Desc),
+        show_rule(Rule, Desc)
     ).
 
-% Run tests
-:- initialization(test_all, main).
+show_rule(Rule, Desc) :-
+    findall(Line-Msg, violation(Rule, Line, Msg), V),
+    format('~n~w~n', [Desc]),
+    (   V == []
+    ->  write('  No violations')
+    ;   forall(
+            member(Line-Msg, V),
+            format('  Line ~d: ~w~n', [Line, Msg])
+        )
+    ).
+
+summary :-
+    findall(_, violation(_,_,_), All),
+    length(All, Count),
+    nl,
+    format('TOTAL VIOLATIONS: ~d~n', [Count]).
+
+rule_desc(rule8,  'range(len()) usage').
+rule_desc(rule9,  'String concat in loops').
+rule_desc(rule10, 'type() vs isinstance()').
+rule_desc(rule11, 'Mutable default args').
+rule_desc(rule12, 'List built via for-loop').
+rule_desc(rule13, 'open() without with').
+rule_desc(rule14, 'Empty except').
