@@ -1,9 +1,7 @@
 :- module(knowledge_base, [rule/4, explanation/2]).
 
-/* =========================================================
-   RULE DEFINITIONS
-   rule(RuleID, Category, Severity, Description)
-   ========================================================= */
+% rule(RuleID, Category, Severity, Description)
+
 
 % ---------------- PERFORMANCE RULES ----------------
 rule(rule8,  performance, medium, "range(len()) usage").
@@ -31,10 +29,8 @@ rule(rule18, security, high,   "Hardcoded credentials").
 rule(rule19, security, medium, "Missing if __name__ == '__main__' guard").
 rule(rule20, security, high,   "Bare except clause").
 
-/* =========================================================
-   EXPLANATIONS / SUGGESTIONS
-   explanation(RuleID, Suggestion)
-   ========================================================= */
+
+% explanation(RuleID, Suggestion)
 
 % -------- PERFORMANCE --------
 explanation(rule8,  "Use enumerate() instead of range(len())").
