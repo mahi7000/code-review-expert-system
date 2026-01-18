@@ -1,11 +1,21 @@
-% Rule 6: Check for TODO comments
 :- module(rule6_todo, [check_todo_comments/2]).
 
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
+
 check_todo_comments(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(todo_comment, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             (contains(Line, 'TODO') ; contains(Line, 'FIXME')),
-             contains(Line, '#'),
-             format(string(Message), 'TODO/FIXME comment found', [])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule6, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-Line, Lines),
+            ( sub_string(Line, _, _, _, "TODO")
+            ; sub_string(Line, _, _, _, "FIXME")
+            ),
+
+            rule(rule6, Category, Severity, _),
+            explanation(rule6, Suggestion),
+            Message = "TODO/FIXME comment without issue reference"
+        ),
+        Violations
+    ).

@@ -1,14 +1,29 @@
 :- module(rule17_shell_injection, [check_shell_injection/2]).
 
-check_shell_injection(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(shell_injection, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             check_shell_function(Line, Function),
-             contains(Line, '+'),  % String concatenation with variables
-             format(string(Message), '~w with user input - shell injection risk! Use subprocess.run() with args list', [Function])),
-            Violations).
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
 
-check_shell_function(Line, Function) :-
-    member(Function, ['os.system(', 'os.popen(', 'subprocess.call(', 'subprocess.Popen(']),
-    contains(Line, Function).
+dangerous_shell_call(Line) :-
+    member(Func, [
+        "os.system(",
+        "os.popen(",
+        "subprocess.call(",
+        "subprocess.Popen("
+    ]),
+    sub_string(Line, _, _, _, Func).
+
+check_shell_injection(File, Violations) :-
+    load_lines(File, Lines),
+    findall(
+        violation(rule17, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+            dangerous_shell_call(LineText),
+            sub_string(LineText, _, _, _, "+"),
+
+            rule(rule17, Category, Severity, _),
+            explanation(rule17, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).

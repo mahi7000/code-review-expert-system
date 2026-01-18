@@ -1,27 +1,34 @@
-% Rule 19: Check for missing if __name__ == "__main__"
 :- module(rule19_name_main, [check_name_main/2]).
 
-check_name_main(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(missing_name_main, LineNum, Message),
-            (has_top_level_code(Lines, LineNum),
-             \+ has_name_main_guard(Lines),
-             format(string(Message), 'Top-level code without if __name__ == "__main__" guard', [])),
-            Violations).
-
-has_top_level_code(Lines, LineNum) :-
-    nth1(LineNum, Lines, Line),
-    trim_string(Line, TrimmedLine),
-    \+ string_concat('def ', _, TrimmedLine),
-    \+ string_concat('class ', _, TrimmedLine),
-    \+ string_concat('import ', _, TrimmedLine),
-    \+ string_concat('from ', _, TrimmedLine),
-    \+ contains(TrimmedLine, '#'),
-    TrimmedLine \= '',
-    \+ contains(TrimmedLine, 'if __name__'),
-    LineNum > 5.  % Skip shebang and imports at top
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
 
 has_name_main_guard(Lines) :-
-    member(Line, Lines),
-    contains(Line, '__name__'),
-    contains(Line, '__main__').
+    member(_-Line, Lines),
+    sub_string(Line, _, _, _, "__name__"),
+    sub_string(Line, _, _, _, "__main__").
+
+top_level_code(Line) :-
+    Line \= "",
+    \+ sub_string(Line, 0, _, _, "def "),
+    \+ sub_string(Line, 0, _, _, "class "),
+    \+ sub_string(Line, 0, _, _, "import "),
+    \+ sub_string(Line, 0, _, _, "from "),
+    \+ sub_string(Line, _, _, _, "#").
+
+check_name_main(File, Violations) :-
+    load_lines(File, Lines),
+    \+ has_name_main_guard(Lines),
+    findall(
+        violation(rule19, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+            top_level_code(LineText),
+            LineNum > 5,
+
+            rule(rule19, Category, Severity, _),
+            explanation(rule19, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).

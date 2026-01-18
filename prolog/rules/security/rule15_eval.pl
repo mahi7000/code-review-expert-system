@@ -1,10 +1,19 @@
-% Rule 15: Check for eval() usage - Security Risk!
 :- module(rule15_eval, [check_eval/2]).
 
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
+
 check_eval(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(eval_usage, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             contains(Line, 'eval('),
-             format(string(Message), 'eval() found - security risk! Use ast.literal_eval() instead', [])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule15, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+            sub_string(LineText, _, _, _, "eval("),
+
+            rule(rule15, Category, Severity, _),
+            explanation(rule15, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).

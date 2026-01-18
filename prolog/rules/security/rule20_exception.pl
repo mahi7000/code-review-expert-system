@@ -1,11 +1,19 @@
-% Rule 20: Check for bare except statements
-:- module(rule20_exception, [check_bare_except/2]).
+:- module(rule20_bare_except, [check_bare_except/2]).
+
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
 
 check_bare_except(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(bare_except, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             trim_string(Line, TrimmedLine),
-             string_concat('except:', _, TrimmedLine),
-             format(string(Message), 'Bare except clause - catches all exceptions including KeyboardInterrupt!', [])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule20, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+            sub_string(LineText, 0, _, _, "except:"),
+
+            rule(rule20, Category, Severity, _),
+            explanation(rule20, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).

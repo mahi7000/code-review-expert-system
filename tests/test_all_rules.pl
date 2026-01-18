@@ -1,4 +1,3 @@
-:- use_module(prolog/utils/file_loader).
 :- use_module(prolog/rule_engine).
 
 :- initialization(main, main).
@@ -9,7 +8,6 @@ main :-
     nl,
     test_file('python_examples/good_examples.py'),
     nl,
-    summary,
     halt.
 
 banner :-
@@ -20,36 +18,38 @@ banner :-
 
 test_file(File) :-
     format('Testing file: ~w~n', [File]),
-    retractall(violation(_,_,_)),
-    load_python_file(File),
-    set_current_file(File),
-    run_all_rules,
-    show_results.
+    run_all_rules(File, Violations),
+    show_results(Violations),
+    summary(Violations).
 
-show_results :-
+show_results(Violations) :-
     nl,
     forall(
         rule_desc(Rule, Desc),
-        show_rule(Rule, Desc)
+        show_rule(Rule, Desc, Violations)
     ).
 
-show_rule(Rule, Desc) :-
-    findall(Line-Msg, violation(Rule, Line, Msg), V),
+show_rule(Rule, Desc, Violations) :-
+    findall(
+        Line-Msg,
+        member(violation(Rule, Line, Msg, _, _, _), Violations),
+        Found
+    ),
     format('~n~w~n', [Desc]),
-    (   V == []
-    ->  write('  No violations')
+    (   Found == []
+    ->  write('  No violations'), nl
     ;   forall(
-            member(Line-Msg, V),
+            member(Line-Msg, Found),
             format('  Line ~d: ~w~n', [Line, Msg])
         )
     ).
 
-summary :-
-    findall(_, violation(_,_,_), All),
-    length(All, Count),
+summary(Violations) :-
+    length(Violations, Count),
     nl,
     format('TOTAL VIOLATIONS: ~d~n', [Count]).
 
+% === Rule descriptions ===
 rule_desc(rule8,  'range(len()) usage').
 rule_desc(rule9,  'String concat in loops').
 rule_desc(rule10, 'type() vs isinstance()').

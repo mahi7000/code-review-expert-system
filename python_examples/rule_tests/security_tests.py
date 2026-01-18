@@ -28,8 +28,8 @@ print("This runs when imported!")  # Should be guarded
 # Rule 20: Bare except
 try:
     risky_operation()
-except:  # BARE EXCEPT!
-    print("Caught everything")
+except Exception as e:  # Avoid bare except; catch Exception and log it
+    print("Caught exception:", e)
 
 # This is OK - uses environment variables
 db_password = os.getenv("DB_PASS")

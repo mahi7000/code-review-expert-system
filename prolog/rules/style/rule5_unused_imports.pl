@@ -1,28 +1,32 @@
-% Rule 5: Check for unused imports
 :- module(rule5_unused_imports, [check_unused_imports/2]).
 
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
+
+import_line(Line, Module) :-
+    (   sub_string(Line, 0, _, _, "import "),
+        split_string(Line, " ", "", [_|[Module|_]])
+    ;   sub_string(Line, 0, _, _, "from "),
+        split_string(Line, " ", "", [_|[Module|_]])
+    ).
+
+used_elsewhere(Lines, Module, ImportLine) :-
+    member(LineNum-Line, Lines),
+    LineNum \= ImportLine,
+    sub_string(Line, _, _, _, Module).
+
 check_unused_imports(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(unused_import, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             trim_string(Line, TrimmedLine),
-                        ((string_concat('import ', Module, TrimmedLine)) ;
-                         (string_concat('from ', Rest, TrimmedLine),
-                            split_string(Rest, ' ', '', [Module|_]))),
-             \+ is_import_used(Lines, Module, LineNum),
-             format(string(Message), 'Unused import: ~w', [TrimmedLine])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule5, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-Line, Lines),
+            import_line(Line, Module),
+            \+ used_elsewhere(Lines, Module, LineNum),
 
-is_import_used(Lines, Module, ImportLine) :-
-    find_module_name(Module, ModuleName),
-    nth1(OtherLine, Lines, OtherLineContent),
-    OtherLine \= ImportLine,
-    contains(OtherLineContent, ModuleName).
-
-find_module_name(Module, ModuleName) :-
-    split_string(Module, ' ', '', Parts),
-    (Parts = [First|_] -> 
-        split_string(First, '.', '', [ModuleName|_])
-    ;
-        ModuleName = Module
+            rule(rule5, Category, Severity, _),
+            explanation(rule5, Suggestion),
+            format(atom(Message), 'Unused import: ~w', [Module])
+        ),
+        Violations
     ).

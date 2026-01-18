@@ -1,28 +1,30 @@
-% Rule 18: Check for hardcoded credentials
-:- module(rule18_creds, [check_hardcoded_creds/2]).
+:- module(rule18_hardcoded_creds, [check_hardcoded_creds/2]).
+
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
+
+credential_keyword(Line) :-
+    member(Key, ["password", "passwd", "secret", "token", "key", "auth"]),
+    sub_string(Line, _, _, _, Key).
+
+safe_source(Line) :-
+    sub_string(Line, _, _, _, "os.getenv(");
+    sub_string(Line, _, _, _, "environ.get(");
+    sub_string(Line, _, _, _, "input(").
 
 check_hardcoded_creds(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(hardcoded_creds, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             contains(Line, '='),
-             contains_credential(Line),
-             format(string(Message), 'Hardcoded credential found', [])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule18, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+            sub_string(LineText, _, _, _, "="),
+            credential_keyword(LineText),
+            \+ safe_source(LineText),
 
-contains_credential(Line) :-
-    trim_string(Line, TrimmedLine),
-    split_string(TrimmedLine, '=', '', [Left, Right]),
-    trim_string(Left, Key),
-    trim_string(Right, Value),
-    (contains(Key, 'password') ;
-     contains(Key, 'passwd') ;
-     contains(Key, 'secret') ;
-     contains(Key, 'key') ;
-     contains(Key, 'token') ;
-     contains(Key, 'auth')),
-    \+ contains(Value, 'os.getenv('),
-    \+ contains(Value, 'environ.get('),
-    \+ contains(Value, 'input('),
-    Value \= '""',
-    Value \= "''".
+            rule(rule18, Category, Severity, _),
+            explanation(rule18, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).

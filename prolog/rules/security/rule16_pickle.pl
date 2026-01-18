@@ -1,12 +1,23 @@
-% Rule 16: Check for pickle.load() usage - Security Risk!
 :- module(rule16_pickle, [check_pickle/2]).
 
+:- use_module(prolog/knowledge_base).
+:- use_module(prolog/utils/file_loader).
+
 check_pickle(File, Violations) :-
-    read_file_lines(File, Lines),
-    findall(violation(pickle_usage, LineNum, Message),
-            (nth1(LineNum, Lines, Line),
-             (contains(Line, 'pickle.load(');
-              contains(Line, '.loads(')),
-             contains(Line, 'pickle'),
-             format(string(Message), 'pickle.load() found - can execute arbitrary code!', [])),
-            Violations).
+    load_lines(File, Lines),
+    findall(
+        violation(rule16, LineNum, Message, Category, Severity, Suggestion),
+        (
+            member(LineNum-LineText, Lines),
+
+            sub_string(LineText, _, _, _, "pickle"),
+            (   sub_string(LineText, _, _, _, "load(")
+            ;   sub_string(LineText, _, _, _, "loads(")
+            ),
+
+            rule(rule16, Category, Severity, _),
+            explanation(rule16, Suggestion),
+            format(atom(Message), '~w', [LineText])
+        ),
+        Violations
+    ).
